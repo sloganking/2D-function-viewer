@@ -37,6 +37,14 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     }
 }
 
+fn wave_pattern(x: f64, y: f64) -> f64 {
+    (x.sin() + y.sin()) / 2.0
+}
+
+fn circular_pattern(x: f64, y: f64) -> f64 {
+    ((x * x + y * y).sqrt()).sin()
+}
+
 fn world_pos_to_screen_pos(x: f32, y: f32, camera: &CameraSettings) -> (f32, f32) {
     let out_x = screen_width() / 2. + ((x - camera.x_offset) * camera.zoom_multiplier);
     let out_y = screen_height() / 2. + ((y - camera.y_offset) * camera.zoom_multiplier);
@@ -219,18 +227,15 @@ async fn main() {
             image.width = screen_width() as u16;
             image.height = screen_height() as u16;
             image.bytes = vec![0; image.width as usize * image.height as usize * 4];
-            println!("image size: {}x{}", image.width, image.height);
 
             // fill image with white
             for screen_x in 0..image.width as u32 {
                 for screen_y in 0..image.height as u32 {
-                    // println!("x: {}, y: {}", x, y);
-                    // image.set_pixel(x, y, WHITE);
                     let (world_x, world_y) =
                         screen_pos_to_world_pos(screen_x as f32, screen_y as f32, &camera);
 
                     let color = mandelbrot(world_x.into(), world_y.into());
-                    // println!("color: {:?}", color);
+
                     image.set_pixel(
                         screen_x,
                         screen_y,
