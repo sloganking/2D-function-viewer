@@ -32,9 +32,9 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     }
 
     if iteration < max_iterations {
-        return iteration as f64;
+        iteration as f64
     } else {
-        return 0.0;
+        0.0
     }
 }
 
