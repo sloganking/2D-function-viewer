@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 macroquad = "0.4.2"
+noise = "0.8.2"

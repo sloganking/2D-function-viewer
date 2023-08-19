@@ -1,6 +1,7 @@
 // use futures::executor::LocalPool;
 // use futures::task::LocalSpawnExt;
 use macroquad::prelude::*;
+use noise::{NoiseFn, OpenSimplex, Perlin, PerlinSurflet, SuperSimplex, Value};
 // use std::collections::VecDeque;
 // use std::fs;
 // use std::path::Path;
@@ -36,6 +37,32 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     } else {
         0.0
     }
+}
+
+fn perlin(x: f64, y: f64) -> f64 {
+    let perlin = OpenSimplex::new(1000000);
+
+    let scale_factor = 2.0;
+
+    let amplitude_factor = 0.5; // The factor by which to reduce the amplitude of each successive octave
+
+    let mut scale = 1.0;
+    let mut amplitude = 1.0;
+
+    let mut combined_noise = 0.0;
+    for _ in 0..4 {
+        combined_noise += perlin.get([x * scale, y * scale]) * amplitude;
+        scale *= scale_factor;
+        amplitude *= amplitude_factor;
+    }
+
+    // println!("combined_noise: {}", combined_noise);
+
+    // squish -1 - 1 into 0-1;
+    combined_noise += 1.;
+    combined_noise /= 2.;
+
+    combined_noise
 }
 
 fn _wave_pattern(x: f64, y: f64) -> f64 {
@@ -235,7 +262,7 @@ async fn main() {
                     let (world_x, world_y) =
                         screen_pos_to_world_pos(screen_x as f32, screen_y as f32, &camera);
 
-                    let color = mandelbrot(world_x.into(), world_y.into());
+                    let color = perlin(world_x.into(), world_y.into());
 
                     image.set_pixel(
                         screen_x,
