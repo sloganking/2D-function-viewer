@@ -1,14 +1,15 @@
 // use futures::executor::LocalPool;
 // use futures::task::LocalSpawnExt;
 use macroquad::prelude::*;
-use std::collections::VecDeque;
-use std::fs;
-use std::path::Path;
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::mpsc::{self, Sender},
-};
+// use std::collections::VecDeque;
+// use std::fs;
+// use std::path::Path;
+// use std::{
+//     collections::HashMap,
+//     path::PathBuf,
+//     sync::mpsc::{self, Sender},
+// };
+
 // use tempdir::TempDir;
 // use tileproc::args::GenTilesArgs;
 // use tileproc::tiler::{gen_tiles_to_dir, generate_lods};
@@ -45,11 +46,11 @@ fn circular_pattern(x: f64, y: f64) -> f64 {
     ((x * x + y * y).sqrt()).sin()
 }
 
-fn world_pos_to_screen_pos(x: f32, y: f32, camera: &CameraSettings) -> (f32, f32) {
-    let out_x = screen_width() / 2. + ((x - camera.x_offset) * camera.zoom_multiplier);
-    let out_y = screen_height() / 2. + ((y - camera.y_offset) * camera.zoom_multiplier);
-    (out_x, out_y)
-}
+// fn world_pos_to_screen_pos(x: f32, y: f32, camera: &CameraSettings) -> (f32, f32) {
+//     let out_x = screen_width() / 2. + ((x - camera.x_offset) * camera.zoom_multiplier);
+//     let out_y = screen_height() / 2. + ((y - camera.y_offset) * camera.zoom_multiplier);
+//     (out_x, out_y)
+// }
 
 fn screen_pos_to_world_pos(x: f32, y: f32, camera: &CameraSettings) -> (f32, f32) {
     let x_out = camera.x_offset + (x - screen_width() / 2.) / camera.zoom_multiplier;
