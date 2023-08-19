@@ -213,7 +213,7 @@ async fn main() {
                 camera.zoom_multiplier -= zoom_speed * 10.;
 
                 // limit the zoom
-                camera.zoom_multiplier = camera.zoom_multiplier.clamp(min_zoom, 20.);
+                camera.zoom_multiplier = camera.zoom_multiplier.clamp(min_zoom, max_zoom);
 
                 // center camera on where mouse was in world
                 camera.x_offset = mouse_world_pos.0;
