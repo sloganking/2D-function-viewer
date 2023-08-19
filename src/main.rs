@@ -38,11 +38,11 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     }
 }
 
-fn wave_pattern(x: f64, y: f64) -> f64 {
+fn _wave_pattern(x: f64, y: f64) -> f64 {
     (x.sin() + y.sin()) / 2.0
 }
 
-fn circular_pattern(x: f64, y: f64) -> f64 {
+fn _circular_pattern(x: f64, y: f64) -> f64 {
     ((x * x + y * y).sqrt()).sin()
 }
 
