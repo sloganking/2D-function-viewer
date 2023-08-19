@@ -23,6 +23,26 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     }
 }
 
+fn julia(cx: f64, cy: f64, x: f64, y: f64) -> f64 {
+    let mut zx = x;
+    let mut zy = y;
+    let max_iterations = 100;
+    let mut iteration = 0;
+
+    while zx * zx + zy * zy < 4.0 && iteration < max_iterations {
+        let tmp = zx * zx - zy * zy + cx;
+        zy = 2.0 * zx * zy + cy;
+        zx = tmp;
+        iteration += 1;
+    }
+
+    if iteration < max_iterations {
+        return iteration as f64;
+    } else {
+        return 0.0;
+    }
+}
+
 fn perlin(x: f64, y: f64) -> f64 {
     let perlin = OpenSimplex::new(1000000);
 
