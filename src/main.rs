@@ -284,13 +284,13 @@ async fn main() {
         // draw text in top left corner
         {
             // let lod = lod_from_zoom(camera.zoom_multiplier, max_lod);
-            // draw_text(
-            //     &("fps: ".to_owned() + &get_fps().to_string()),
-            //     20.0,
-            //     20.0,
-            //     30.0,
-            //     WHITE,
-            // );
+            draw_text(
+                &("fps: ".to_owned() + &get_fps().to_string()),
+                20.0,
+                20.0,
+                30.0,
+                WHITE,
+            );
 
             draw_text(
                 &("zoom_multiplier: ".to_owned() + &camera.zoom_multiplier.to_string()),
