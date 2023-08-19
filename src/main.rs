@@ -1,21 +1,5 @@
-// use futures::executor::LocalPool;
-// use futures::task::LocalSpawnExt;
 use macroquad::prelude::*;
 use noise::{NoiseFn, OpenSimplex, Perlin, PerlinSurflet, SuperSimplex, Value};
-// use std::collections::VecDeque;
-// use std::fs;
-// use std::path::Path;
-// use std::{
-//     collections::HashMap,
-//     path::PathBuf,
-//     sync::mpsc::{self, Sender},
-// };
-
-// use tempdir::TempDir;
-// use tileproc::args::GenTilesArgs;
-// use tileproc::tiler::{gen_tiles_to_dir, generate_lods};
-// mod options;
-// use clap::Parser;
 
 const LOD_FUZZYNESS: f32 = 1.0;
 
