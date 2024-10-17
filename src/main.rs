@@ -299,33 +299,17 @@ async fn main() {
             draw_text(
                 &("zoom_multiplier: ".to_owned() + &camera.zoom_multiplier.to_string()),
                 20.0,
-                40.0,
+                20.0 * 2.,
                 30.0,
                 WHITE,
             );
-
-            // draw_text(
-            //     &("LOD: ".to_owned() + &lod.to_string()),
-            //     20.0,
-            //     60.0,
-            //     30.0,
-            //     WHITE,
-            // );
-
-            // draw_text(
-            //     &("rendered_tiles: ".to_owned() + &num_rendered_tiles.to_string()),
-            //     20.0,
-            //     80.0,
-            //     30.0,
-            //     WHITE,
-            // );
 
             let mouse = mouse_position();
             let mouse_coord = screen_pos_to_world_pos(mouse.0, mouse.1, &camera);
             draw_text(
                 &("mouse.x: ".to_owned() + &mouse_coord.0.to_string()),
                 20.0,
-                100.0,
+                20. * 3.,
                 30.0,
                 WHITE,
             );
@@ -333,7 +317,7 @@ async fn main() {
             draw_text(
                 &("mouse.y: ".to_owned() + &mouse_coord.1.to_string()),
                 20.0,
-                120.0,
+                20. * 4.,
                 30.0,
                 WHITE,
             );
