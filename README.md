@@ -1,4 +1,4 @@
-# mandelbrot viewer
+# 2D-function-viewer
 
 This program renders any function that takes an x-y coordinate in world space and outputs a pixel. It also lets the user move the camera to explore the render space. 
 
