@@ -3,6 +3,26 @@ use noise::{NoiseFn, OpenSimplex, Perlin, PerlinSurflet, SuperSimplex, Value};
 
 const LOD_FUZZYNESS: f32 = 1.0;
 
+// fn mandelbrot(x: f64, y: f64) -> f64 {
+//     let mut zx = 0.0;
+//     let mut zy = 0.0;
+//     let mut iteration = 0;
+//     let max_iterations = 100;
+
+//     while zx * zx + zy * zy < 4.0 && iteration < max_iterations {
+//         let tmp = zx * zx - zy * zy + x;
+//         zy = 2.0 * zx * zy + y;
+//         zx = tmp;
+//         iteration += 1;
+//     }
+
+//     if iteration < max_iterations {
+//         iteration as f64
+//     } else {
+//         0.0
+//     }
+// }
+
 fn mandelbrot(x: f64, y: f64) -> f64 {
     let mut zx = 0.0;
     let mut zy = 0.0;
@@ -10,16 +30,16 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     let max_iterations = 100;
 
     while zx * zx + zy * zy < 4.0 && iteration < max_iterations {
-        let tmp = zx * zx - zy * zy + x;
+        let temp = zx * zx - zy * zy + x;
         zy = 2.0 * zx * zy + y;
-        zx = tmp;
+        zx = temp;
         iteration += 1;
     }
 
-    if iteration < max_iterations {
-        iteration as f64
+    if iteration == max_iterations {
+        0.0 // Point is in the Mandelbrot set
     } else {
-        0.0
+        iteration as f64 / max_iterations as f64 // Normalize the iteration count
     }
 }
 
@@ -266,7 +286,7 @@ async fn main() {
                     let (world_x, world_y) =
                         screen_pos_to_world_pos(screen_x as f32, screen_y as f32, &camera);
 
-                    let color = perlin(world_x.into(), world_y.into());
+                    let color = mandelbrot(world_x.into(), world_y.into());
 
                     image.set_pixel(
                         screen_x,
