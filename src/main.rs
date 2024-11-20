@@ -23,6 +23,35 @@ const LOD_FUZZYNESS: f32 = 1.0;
 //     }
 // }
 
+fn value_to_color(value: f32) -> Color {
+    let clamped = value.clamp(0.0, 1.0);
+    let h = clamped * 360.0; // Hue goes from 0 to 360
+    let s = 1.0;
+    let v = 1.0;
+
+    let c = v * s;
+    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+    let m = v - c;
+
+    let (r, g, b) = match h as u32 {
+        0..=60 => (c, x, 0.0),
+        61..=120 => (x, c, 0.0),
+        121..=180 => (0.0, c, x),
+        181..=240 => (0.0, x, c),
+        241..=300 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+
+    // (r + m, g + m, b + m)
+
+    Color {
+        r: r + m,
+        g: g + m,
+        b: b + m,
+        a: 1.0,
+    }
+}
+
 fn mandelbrot(x: f64, y: f64) -> f64 {
     let mut zx = 0.0;
     let mut zy = 0.0;
@@ -286,18 +315,11 @@ async fn main() {
                     let (world_x, world_y) =
                         screen_pos_to_world_pos(screen_x as f32, screen_y as f32, &camera);
 
-                    let color = mandelbrot(world_x.into(), world_y.into());
+                    let brightness_value = mandelbrot(world_x.into(), world_y.into());
 
-                    image.set_pixel(
-                        screen_x,
-                        screen_y,
-                        Color {
-                            r: color as f32,
-                            g: 0.,
-                            b: 0.,
-                            a: 1.0,
-                        },
-                    );
+                    let color = value_to_color(brightness_value as f32);
+
+                    image.set_pixel(screen_x, screen_y, color);
                 }
             }
             // clear_background(LIGHTGRAY);
