@@ -1,3 +1,5 @@
+use std::sync::mpsc;
+
 use macroquad::prelude::*;
 use noise::{NoiseFn, OpenSimplex, Perlin, PerlinSurflet, SuperSimplex, Value};
 
@@ -23,31 +25,66 @@ const LOD_FUZZYNESS: f64 = 1.0;
 //     }
 // }
 
-fn value_to_color(value: f32) -> Color {
+// fn value_to_color(value: f64) -> Color {
+//     let clamped = value.clamp(0.0, 1.0);
+//     let h = clamped * 360.0; // Hue goes from 0 to 360
+//     let s = 1.0;
+//     let v = 1.0;
+
+//     let c = v * s;
+//     let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+//     let m = v - c;
+
+//     let (r, g, b) = match h as u32 {
+//         0..=60 => (c, x, 0.0),
+//         61..=120 => (x, c, 0.0),
+//         121..=180 => (0.0, c, x),
+//         181..=240 => (0.0, x, c),
+//         241..=300 => (x, 0.0, c),
+//         _ => (c, 0.0, x),
+//     };
+
+//     // (r + m, g + m, b + m)
+
+//     Color {
+//         r: r as f32 + m as f32,
+//         g: g as f32 + m as f32,
+//         b: b as f32 + m as f32,
+//         a: 1.0,
+//     }
+// }
+
+fn value_to_color(value: f64) -> Color {
     let clamped = value.clamp(0.0, 1.0);
     let h = clamped * 360.0; // Hue goes from 0 to 360
     let s = 1.0;
     let v = 1.0;
 
     let c = v * s;
-    let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+    let h_prime = h / 60.0;
+    let x = c * (1.0 - ((h_prime % 2.0) - 1.0).abs());
     let m = v - c;
 
-    let (r, g, b) = match h as u32 {
-        0..=60 => (c, x, 0.0),
-        61..=120 => (x, c, 0.0),
-        121..=180 => (0.0, c, x),
-        181..=240 => (0.0, x, c),
-        241..=300 => (x, 0.0, c),
-        _ => (c, 0.0, x),
+    let (r1, g1, b1) = if h_prime >= 0.0 && h_prime < 1.0 {
+        (c, x, 0.0)
+    } else if h_prime >= 1.0 && h_prime < 2.0 {
+        (x, c, 0.0)
+    } else if h_prime >= 2.0 && h_prime < 3.0 {
+        (0.0, c, x)
+    } else if h_prime >= 3.0 && h_prime < 4.0 {
+        (0.0, x, c)
+    } else if h_prime >= 4.0 && h_prime < 5.0 {
+        (x, 0.0, c)
+    } else if h_prime >= 5.0 && h_prime < 6.0 {
+        (c, 0.0, x)
+    } else {
+        (0.0, 0.0, 0.0)
     };
 
-    // (r + m, g + m, b + m)
-
     Color {
-        r: r + m,
-        g: g + m,
-        b: b + m,
+        r: (r1 + m) as f32,
+        g: (g1 + m) as f32,
+        b: (b1 + m) as f32,
         a: 1.0,
     }
 }
@@ -160,11 +197,36 @@ struct CameraSettings {
     zoom_multiplier: f64,
 }
 
+fn julia_normalized(cx: f64, cy: f64, x: f64, y: f64) -> f64 {
+    let mut zx = x;
+    let mut zy = y;
+    let max_iterations = 100;
+    let mut iteration = 0;
+
+    while zx * zx + zy * zy < 4.0 && iteration < max_iterations {
+        let tmp = zx * zx - zy * zy + cx;
+        zy = 2.0 * zx * zy + cy;
+        zx = tmp;
+        iteration += 1;
+    }
+
+    if iteration < max_iterations {
+        return iteration as f64 / max_iterations as f64;
+    } else {
+        return 0.0;
+    }
+}
+
 #[macroquad::main("TileView")]
 async fn main() {
     // let args = options::Args::parse();
 
     let max_lod = 0;
+
+    let mut cx = -0.123;
+    let mut cy = 0.745;
+
+    let cx_change = 0.0001;
 
     let two: f64 = 2.0;
     let default_zoom = 1.0 / two.powf(max_lod as f64 - 1.0);
@@ -314,30 +376,76 @@ async fn main() {
                 mouse_clicked_in_position = None;
             }
         }
+
+        fn screen_pos_to_world_pos_thread_safe(
+            x: f64,
+            y: f64,
+            camera: &CameraSettings,
+            screen_width: f64,
+            screen_height: f64,
+        ) -> (f64, f64) {
+            let x_out = camera.x_offset + (x - screen_width / 2.) / camera.zoom_multiplier;
+            let y_out = camera.y_offset + (y - screen_height / 2.) / camera.zoom_multiplier;
+            (x_out, y_out)
+        }
+
+        use rayon::prelude::*;
         // render
         {
             let mut image = Image::empty();
+            use rayon::prelude::*;
+
+            // On the main thread
             image.width = screen_width() as u16;
             image.height = screen_height() as u16;
             image.bytes = vec![0; image.width as usize * image.height as usize * 4];
 
-            // fill image with white
-            for screen_x in 0..image.width as u32 {
-                for screen_y in 0..image.height as u32 {
-                    let (world_x, world_y) =
-                        screen_pos_to_world_pos(screen_x as f64, screen_y as f64, &camera);
+            let width = image.width as u32;
+            let height = image.height as u32;
+            let num_pixels = (width * height) as usize;
+            println!("num_pixels: {}", num_pixels);
 
-                    let brightness_value = mandelbrot(world_x.into(), world_y.into());
+            let screen_width = screen_width() as f64;
+            let screen_height = screen_height() as f64;
 
-                    let color = value_to_color(brightness_value as f32);
+            // Create a buffer to hold the computed colors
+            let mut pixels = vec![Color::default(); num_pixels];
 
-                    image.set_pixel(screen_x, screen_y, color);
-                }
+            // Compute pixel colors in parallel
+            pixels.par_iter_mut().enumerate().for_each(|(i, pixel)| {
+                let screen_x = (i as u32) % width;
+                let screen_y = (i as u32) / width;
+
+                // Use the refactored function without Macroquad dependencies
+                let (world_x, world_y) = screen_pos_to_world_pos_thread_safe(
+                    screen_x as f64,
+                    screen_y as f64,
+                    &camera,
+                    screen_width,
+                    screen_height,
+                );
+
+                let brightness_value = mandelbrot(world_x, world_y);
+
+                let color = value_to_color(brightness_value);
+
+                *pixel = color;
+            });
+
+            // After the parallel loop, update the image on the main thread
+            for (i, pixel) in pixels.into_iter().enumerate() {
+                let screen_x = (i as u32) % width;
+                let screen_y = (i as u32) / width;
+                // println!("screen_x: {}, screen_y: {}", screen_x, screen_y);
+                image.set_pixel(screen_x, screen_y, pixel);
             }
             // clear_background(LIGHTGRAY);
             let texture = Texture2D::from_image(&image);
             draw_texture(&texture, 0., 0., WHITE);
         }
+
+        // cy += cx_change;
+        // cx += cx_change;
 
         // draw text in top left corner
         {
