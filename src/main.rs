@@ -109,6 +109,23 @@ fn mandelbrot(x: f64, y: f64) -> f64 {
     }
 }
 
+fn burning_ship(x: f64, y: f64) -> f64 {
+    let max_iterations = 1000;
+    let mut zx = 0.0;
+    let mut zy = 0.0;
+    let mut iteration = 0;
+
+    while zx * zx + zy * zy < 4.0 && iteration < max_iterations {
+        let temp_zx = zx * zx - zy * zy + x;
+        zy = 2.0 * zx.abs() * zy.abs() + y;
+        zx = temp_zx.abs();
+        iteration += 1;
+    }
+
+    // Normalize the result to a range between 0 and 1
+    iteration as f64 / max_iterations as f64
+}
+
 fn julia(cx: f64, cy: f64, x: f64, y: f64) -> f64 {
     let mut zx = x;
     let mut zy = y;
@@ -403,7 +420,7 @@ async fn main() {
             let width = image.width as u32;
             let height = image.height as u32;
             let num_pixels = (width * height) as usize;
-            println!("num_pixels: {}", num_pixels);
+            // println!("num_pixels: {}", num_pixels);
 
             let screen_width = screen_width() as f64;
             let screen_height = screen_height() as f64;
@@ -425,7 +442,7 @@ async fn main() {
                     screen_height,
                 );
 
-                let brightness_value = mandelbrot(world_x, world_y);
+                let brightness_value = burning_ship(world_x, world_y);
 
                 let color = value_to_color(brightness_value);
 
