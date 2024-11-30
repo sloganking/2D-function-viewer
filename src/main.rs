@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use noise::{NoiseFn, OpenSimplex, Perlin, PerlinSurflet, SuperSimplex, Value};
 
-const LOD_FUZZYNESS: f32 = 1.0;
+const LOD_FUZZYNESS: f64 = 1.0;
 
 // fn mandelbrot(x: f64, y: f64) -> f64 {
 //     let mut zx = 0.0;
@@ -132,9 +132,9 @@ fn _circular_pattern(x: f64, y: f64) -> f64 {
 //     (out_x, out_y)
 // }
 
-fn screen_pos_to_world_pos(x: f32, y: f32, camera: &CameraSettings) -> (f32, f32) {
-    let x_out = camera.x_offset + (x - screen_width() / 2.) / camera.zoom_multiplier;
-    let y_out = camera.y_offset + (y - screen_height() / 2.) / camera.zoom_multiplier;
+fn screen_pos_to_world_pos(x: f64, y: f64, camera: &CameraSettings) -> (f64, f64) {
+    let x_out = camera.x_offset + (x - screen_width() as f64 / 2.) / camera.zoom_multiplier;
+    let y_out = camera.y_offset + (y - screen_height() as f64 / 2.) / camera.zoom_multiplier;
     (x_out, y_out)
 }
 
@@ -155,9 +155,9 @@ async fn infer_target_fps() -> i32 {
 }
 
 struct CameraSettings {
-    x_offset: f32,
-    y_offset: f32,
-    zoom_multiplier: f32,
+    x_offset: f64,
+    y_offset: f64,
+    zoom_multiplier: f64,
 }
 
 #[macroquad::main("TileView")]
@@ -166,8 +166,8 @@ async fn main() {
 
     let max_lod = 0;
 
-    let two: f32 = 2.0;
-    let default_zoom = 1.0 / two.powf(max_lod as f32 - 1.0);
+    let two: f64 = 2.0;
+    let default_zoom = 1.0 / two.powf(max_lod as f64 - 1.0);
 
     let mut camera = CameraSettings {
         x_offset: 0.,
@@ -176,8 +176,8 @@ async fn main() {
     };
 
     let mut mouse_clicked_in_position: Option<(f32, f32)> = None;
-    let mut clicked_in_x_offset: f32 = 0.0;
-    let mut clicked_in_y_offset: f32 = 0.0;
+    let mut clicked_in_x_offset: f64 = 0.0;
+    let mut clicked_in_y_offset: f64 = 0.0;
 
     let target_fps = infer_target_fps().await;
     // let frame_time_limit = 1. / target_fps as f64;
@@ -187,7 +187,7 @@ async fn main() {
 
         // react to key presses
         {
-            let fps_speed_multiplier = 144. / target_fps as f32;
+            let fps_speed_multiplier = 144. / target_fps as f64;
             let speed = if is_key_down(KeyCode::LeftShift) {
                 20. / camera.zoom_multiplier * fps_speed_multiplier
             } else {
@@ -221,9 +221,9 @@ async fn main() {
                 camera.zoom_multiplier -= zoom_speed;
             }
 
-            let min_zoom = LOD_FUZZYNESS / two.powf(max_lod as f32 + 1.0);
+            let min_zoom = LOD_FUZZYNESS / two.powf(max_lod as f64 + 1.0);
             // let max_zoom = 20.0;
-            let max_zoom = f32::MAX;
+            let max_zoom = f64::MAX;
 
             // limit the zoom
             camera.zoom_multiplier = camera.zoom_multiplier.clamp(min_zoom, max_zoom);
@@ -233,8 +233,11 @@ async fn main() {
             if mouse_scroll == 1.0 && camera.zoom_multiplier < max_zoom {
                 // record mouse positions
                 let mouse_screen_pos = mouse_position();
-                let mouse_world_pos =
-                    screen_pos_to_world_pos(mouse_screen_pos.0, mouse_screen_pos.1, &camera);
+                let mouse_world_pos = screen_pos_to_world_pos(
+                    mouse_screen_pos.0.into(),
+                    mouse_screen_pos.1.into(),
+                    &camera,
+                );
 
                 // zoom in
                 camera.zoom_multiplier += zoom_speed * 10.;
@@ -246,8 +249,10 @@ async fn main() {
                 camera.x_offset = mouse_world_pos.0;
                 camera.y_offset = mouse_world_pos.1;
 
-                let screen_x_to_change = mouse_screen_pos.0 - screen_width() / 2.;
-                let screen_y_to_change = mouse_screen_pos.1 - screen_height() / 2.;
+                let screen_x_to_change: f64 =
+                    mouse_screen_pos.0 as f64 - screen_width() as f64 / 2.;
+                let screen_y_to_change: f64 =
+                    mouse_screen_pos.1 as f64 - screen_height() as f64 / 2.;
 
                 // move camera by screen_x_to_change
                 camera.x_offset -= screen_x_to_change / camera.zoom_multiplier;
@@ -255,21 +260,28 @@ async fn main() {
             } else if mouse_scroll == -1.0 && camera.zoom_multiplier > min_zoom {
                 // record mouse positions
                 let mouse_screen_pos = mouse_position();
-                let mouse_world_pos =
-                    screen_pos_to_world_pos(mouse_screen_pos.0, mouse_screen_pos.1, &camera);
+                let mouse_world_pos = screen_pos_to_world_pos(
+                    mouse_screen_pos.0.into(),
+                    mouse_screen_pos.1.into(),
+                    &camera,
+                );
 
                 // zoom out
                 camera.zoom_multiplier -= zoom_speed * 10.;
 
                 // limit the zoom
-                camera.zoom_multiplier = camera.zoom_multiplier.clamp(min_zoom, max_zoom);
+                camera.zoom_multiplier = camera
+                    .zoom_multiplier
+                    .clamp(min_zoom.into(), max_zoom.into());
 
                 // center camera on where mouse was in world
                 camera.x_offset = mouse_world_pos.0;
                 camera.y_offset = mouse_world_pos.1;
 
-                let screen_x_to_change = mouse_screen_pos.0 - screen_width() / 2.;
-                let screen_y_to_change = mouse_screen_pos.1 - screen_height() / 2.;
+                let screen_x_to_change: f64 =
+                    mouse_screen_pos.0 as f64 - screen_width() as f64 / 2.;
+                let screen_y_to_change: f64 =
+                    mouse_screen_pos.1 as f64 - screen_height() as f64 / 2.;
 
                 // move camera by screen_x_to_change
                 camera.x_offset -= screen_x_to_change / camera.zoom_multiplier;
@@ -288,12 +300,12 @@ async fn main() {
                         let cur_mouse_pos = mouse_position();
 
                         // calc new x_offset
-                        let mouse_x_diff = cur_mouse_pos.0 - x.0;
+                        let mouse_x_diff: f64 = cur_mouse_pos.0 as f64 - x.0 as f64;
                         camera.x_offset =
                             -(clicked_in_x_offset + mouse_x_diff / camera.zoom_multiplier);
 
                         // calc new y_offset
-                        let mouse_y_diff = cur_mouse_pos.1 - x.1;
+                        let mouse_y_diff: f64 = cur_mouse_pos.1 as f64 - x.1 as f64;
                         camera.y_offset =
                             -(clicked_in_y_offset + mouse_y_diff / camera.zoom_multiplier);
                     }
@@ -313,7 +325,7 @@ async fn main() {
             for screen_x in 0..image.width as u32 {
                 for screen_y in 0..image.height as u32 {
                     let (world_x, world_y) =
-                        screen_pos_to_world_pos(screen_x as f32, screen_y as f32, &camera);
+                        screen_pos_to_world_pos(screen_x as f64, screen_y as f64, &camera);
 
                     let brightness_value = mandelbrot(world_x.into(), world_y.into());
 
@@ -347,7 +359,7 @@ async fn main() {
             );
 
             let mouse = mouse_position();
-            let mouse_coord = screen_pos_to_world_pos(mouse.0, mouse.1, &camera);
+            let mouse_coord = screen_pos_to_world_pos(mouse.0.into(), mouse.1.into(), &camera);
             draw_text(
                 &("mouse.x: ".to_owned() + &mouse_coord.0.to_string()),
                 20.0,
