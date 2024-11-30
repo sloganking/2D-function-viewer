@@ -8,6 +8,10 @@ This program renders any function that takes an x-y coordinate in world space an
 https://github.com/user-attachments/assets/3b63b12c-9530-4e94-b7bb-fb2154127287
 
 
+
+https://github.com/user-attachments/assets/ebbfe668-2028-4372-b21d-4e8b7f6a8880
+
+
 ### Mandelbrot
 
 ![image](https://github.com/user-attachments/assets/9698c181-bb16-4766-b69b-d37f79883534)
